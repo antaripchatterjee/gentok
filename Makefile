@@ -2,7 +2,7 @@ CC=gcc
 AR=ar
 
 CFLAGS=-Wall -std=c11 -static-libgcc -g
-MACROS=-DMAKEFILECOMPILING
+MACROS=-D MAKEFILECOMPILING
 INCLUDES=./include
 
 all: gentok.a main.o

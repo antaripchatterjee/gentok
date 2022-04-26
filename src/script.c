@@ -1,8 +1,8 @@
-#ifdef DMAKEFILECOMPILING
+#ifdef MAKEFILECOMPILING
 #include "script.h"
 #else
 #include "../include/script.h"
-#endif // DMAKEFILECOMPILING
+#endif // MAKEFILECOMPILING
 
 char* read_script_from_file(const char* filename, enum SCRIPT_RD_CODE* script_rd_code_ptr) {
     FILE* source_fp = fopen(filename, "r");

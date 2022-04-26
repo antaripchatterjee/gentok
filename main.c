@@ -1,8 +1,8 @@
-#ifdef DMAKEFILECOMPILING
+#ifdef MAKEFILECOMPILING
 #include "gentok.h"
 #else
 #include "./include/gentok.h"
-#endif // DMAKEFILECOMPILING
+#endif // MAKEFILECOMPILING
 
 int main(int argc, const char* argv[]) {
     enum SCRIPT_RD_CODE script_rd_code = SCRIPT_RD_NOERR;

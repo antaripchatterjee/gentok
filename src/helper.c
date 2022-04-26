@@ -1,8 +1,8 @@
-#ifdef DMAKEFILECOMPILING
+#ifdef MAKEFILECOMPILING
 #include "helper.h"
 #else
 #include "../include/helper.h"
-#endif // DMAKEFILECOMPILING
+#endif // MAKEFILECOMPILING
 
 long get_index_from(const char* token_buffer, const long count, const char** list){
     // const long int count = sizeof(list)/sizeof(char*);

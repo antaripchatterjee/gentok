@@ -1,8 +1,8 @@
-#ifdef DMAKEFILECOMPILING
+#ifdef MAKEFILECOMPILING
 #include "gentok.h"
 #else
 #include "../include/gentok.h"
-#endif // DMAKEFILECOMPILING
+#endif // MAKEFILECOMPILING
 
 static char* append_character(char* token, char ch) {
     size_t next_size = strlen(token) + 2;

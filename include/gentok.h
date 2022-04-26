@@ -2,13 +2,13 @@
 #define __GENTOK_H__
 
 #include <ctype.h>
-#ifdef DMAKEFILECOMPILING
+#ifdef MAKEFILECOMPILING
 #include "script.h"
 #include "helper.h"
 #else
 #include "../include/script.h"
 #include "../include/helper.h"
-#endif // DMAKEFILECOMPILING
+#endif // MAKEFILECOMPILING
 
 enum TOKENTYPE_E {
     T_TOKEN_INVALID = -1,
