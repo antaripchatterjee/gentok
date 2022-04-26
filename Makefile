@@ -5,16 +5,16 @@ CFLAGS=-Wall -std=c11 -static-libgcc -g
 MACROS=-DMAKEFILECOMPILING
 INCLUDES=./include
 
-all: mkdir_o main.o gentok.a
+all: gentok.a main.o
 	$(CC) $(CFLAGS) $(MACROS) -I$(INCLUDES) ./objects/main.o ./lib/debug/gentok.a -o ./bin/debug/gentok
 
-release: mkdir_o main.o install
+release: install main.o
 	$(CC) $(CFLAGS) $(MACROS) -I$(INCLUDES) ./objects/main.o ./lib/release/gentok.a -s -o ./bin/release/gentok
 
-install: mkdirs_r script.o helper.o gentok.o
+install: mkdirs_r mkdir_o script.o helper.o gentok.o
 	$(AR) -rcs ./lib/release/gentok.a ./objects/script.o ./objects/helper.o ./objects/gentok.o
 
-gentok.a: mkdirs_d script.o helper.o gentok.o
+gentok.a: mkdirs_d mkdir_o script.o helper.o gentok.o
 	$(AR) -rc ./lib/debug/gentok.a ./objects/script.o ./objects/helper.o ./objects/gentok.o
 
 script.o: ./src/script.c
