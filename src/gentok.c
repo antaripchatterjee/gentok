@@ -24,26 +24,24 @@ static struct token_t* add_token(struct token_t* token, const char* token_buffer
     return token->next_token;
 }
 
-static bool treat_symbol_as_operator(enum TOKENTYPE_E prev_token_type) {
-    return prev_token_type == T_OPERAND_IDENTIFIER ||
-        prev_token_type == T_OPERAND_STRING_VALUE ||
-        prev_token_type == T_OPERAND_BINARY_NUMBER ||
-        prev_token_type == T_OPERAND_OCTAL_NUMBER ||
-        prev_token_type == T_OPERAND_DECIMAL_NUMBER ||
-        prev_token_type == T_OPERAND_HEXDECIMAL_NUMBER ||
-        prev_token_type == T_SYMBOL_CLOSING_CURLY_BRACKET ||
-        prev_token_type == T_SYMBOL_CLOSING_PARANANTHESIS ||
-        prev_token_type == T_SYMBOL_CLOSING_SQUARE_BRACKET;
+static bool treat_as_sign(enum TOKENTYPE_E prev_token_type) {
+    return prev_token_type != T_OPERAND_IDENTIFIER &&
+        prev_token_type != T_OPERAND_STRING_VALUE &&
+        prev_token_type != T_OPERAND_BINARY_NUMBER &&
+        prev_token_type != T_OPERAND_OCTAL_NUMBER &&
+        prev_token_type != T_OPERAND_DECIMAL_NUMBER &&
+        prev_token_type != T_OPERAND_HEXDECIMAL_NUMBER &&
+        prev_token_type != T_SYMBOL_CLOSING_CURLY_BRACKET &&
+        prev_token_type != T_SYMBOL_CLOSING_PARANANTHESIS &&
+        prev_token_type != T_SYMBOL_CLOSING_SQUARE_BRACKET;
 }
 
 bool tokenize(const char* script, struct token_t* token, long* number_of_tokens) {
     const char* reserved_keywords[] = RESERVED_KEYWORDS;
-    const char* valid_operators[] = VALID_OPERATORS;
-    const char* valid_symbols[] = VALID_SYMBOLS;
+    const char* other_valid_tokens[] = OTHER_VALID_TOKENS;
 
     const long count_reserved_keywords = sizeof(reserved_keywords)/sizeof(char*);
-    const long count_valid_operators = sizeof(valid_operators)/sizeof(char*);
-    const long count_valid_symbols = sizeof(valid_symbols)/sizeof(char*);
+    const long count_other_tokens = sizeof(other_valid_tokens)/sizeof(char*);
 
     char curr_char, prev_char = '\0';
     char string_character = '\0';
@@ -51,7 +49,7 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
     bool success = true;
 
     bool is_word = false, is_number = false, is_comment = false,
-        is_string = false, is_symbol = false, is_operator = false, is_sign = false;
+        is_string = false, is_symbol_or_operator = false, is_sign = false;
     short number_base_system = 0;
     bool exp_appended = false, decimal_appended = false, allow_char_as_num = false;
     bool reset_current_token = false;
@@ -244,14 +242,14 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                 } else if(is_sign) {
                     if(isspace(curr_char)) {
                         continue;
-                    } else if(isalnum(curr_char) || curr_char == '_') {
+                    } else if(isalnum(curr_char) || curr_char == '_' || curr_char == '(' || curr_char == '[') {
                         // add the token as unary operator and reset the token buffer
                         current_token_type = token_buffer[strlen(token_buffer) - 1] == '+'
                             ? T_OPERATOR_UNARY_SIGN_PLUS : T_OPERATOR_UNARY_SIGN_MINUS;
                         is_sign = false;
                         reset_current_token = true;
                     } else if(curr_char == '+' || curr_char == '-') {
-                        // update the unary operator
+                        // update the unary sign operator
                         token_buffer[strlen(token_buffer) - 1] = token_buffer[strlen(token_buffer) - 1] == curr_char ? '+': '-';
                     } else {
                         // Raise syntax error
@@ -263,31 +261,15 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                         );
                         success = false;
                     }
-                } else if(is_operator) {
+                } else if(is_symbol_or_operator) {
                     token_buffer = append_character(token_buffer, curr_char);
-                    long token_index = get_index_from(token_buffer, count_valid_operators, valid_operators);
+                    long token_index = get_index_from(token_buffer, count_other_tokens, other_valid_tokens);
                     if(token_index == -1) {
                         token_buffer[strlen(token_buffer)-1] = '\0';
                         reset_current_token = true;
-                        is_operator = false;
+                        is_symbol_or_operator = false;
                     } else {
-                        current_token_type = (enum TOKENTYPE_E) (token_index + OPERATOR_TOKEN_OFFSET);
-                    }
-                } else if(is_symbol) {
-                    if(curr_char == '.' && prev_char == '.')  {
-                        token_buffer = append_character(token_buffer, curr_char);
-                        current_token_type = T_TOKEN_UNKNOWN;
-                        is_symbol = false;
-                    } else {
-                        token_buffer = append_character(token_buffer, curr_char);
-                        long token_index = get_index_from(token_buffer, count_valid_symbols, valid_symbols);
-                        if(token_index == -1) {
-                            token_buffer[strlen(token_buffer)-1] = '\0';
-                            reset_current_token = true;
-                            is_symbol = false;
-                        } else {
-                            current_token_type = (enum TOKENTYPE_E) (token_index + SYMBOL_TOKEN_OFFSET);
-                        }
+                        current_token_type = (enum TOKENTYPE_E) (token_index + OTHER_TOKEN_OFFSET);
                     }
                 } else {
                     if(isalpha(curr_char) || curr_char == '_') {
@@ -305,27 +287,21 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                         is_string = true;
                     } else if(!isspace(curr_char)) {
                         token_buffer = append_character(token_buffer, curr_char);
-                        long token_index = get_index_from(token_buffer, count_valid_operators, valid_operators);
+                        long token_index = get_index_from(token_buffer, count_other_tokens, other_valid_tokens);
                         if(token_index != -1) {
-                            if((curr_char == '+' || curr_char == '-') && !treat_symbol_as_operator(prev_token_type)) {
+                            if((curr_char == '+' || curr_char == '-') && treat_as_sign(prev_token_type)) {
                                 is_sign = true;
                             } else {
-                                current_token_type = (enum TOKENTYPE_E) (token_index + OPERATOR_TOKEN_OFFSET);
-                                is_operator = true;
+                                current_token_type = (enum TOKENTYPE_E) (token_index + OTHER_TOKEN_OFFSET);
+                                is_symbol_or_operator = true;
                             }
                         } else {
-                            token_index = get_index_from(token_buffer, count_valid_symbols, valid_symbols);
-                            if(token_index != -1) {
-                                current_token_type = (enum TOKENTYPE_E) (token_index + SYMBOL_TOKEN_OFFSET);
-                                is_symbol = true;
-                            } else {
-                                // Raise invalid token error
-                                raise_invalid_token_error(
-                                    line_no, col_no, index,
-                                    "Found -> \"%s\", not a valid operator or symbol\n", token_buffer
-                                );
-                                success = false;
-                            }
+                            // Raise invalid token error
+                            raise_invalid_token_error(
+                                line_no, col_no, index,
+                                "Found -> \"%s\", not a valid operator or symbol\n", token_buffer
+                            );
+                            success = false;
                         }
                     }
                 }
