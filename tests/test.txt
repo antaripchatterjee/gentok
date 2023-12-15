@@ -1,3 +1,4 @@
 def main(...) {
+    Pointer[Integer] p = null
     print("Hello, World!")
 }

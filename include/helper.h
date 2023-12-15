@@ -10,9 +10,9 @@
 #define RESERVED_KEYWORDS { \
     "as", "auto", "break", "class", \
     "continue", "def", "elif", "else", \
-    "ensure", "final", "for", "foreach", \
-    "if", "import", "match", "raise", "ref", \
-    "rescue", "return", "try", "when", "while" \
+    "ensure", "false", "final", "for", "foreach", \
+    "if", "import", "match", "null", "raise", "ref", \
+    "rescue", "return", "true", "try", "when", "while" \
 }
 
 #define VALID_OPERATORS { \
