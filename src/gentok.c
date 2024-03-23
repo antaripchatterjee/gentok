@@ -4,6 +4,8 @@
 #include "../include/gentok.h"
 #endif // MAKEFILECOMPILING
 
+#include <stdio.h>
+
 static char* append_character(char* token, char ch) {
     size_t next_size = strlen(token) + 2;
     token = (char*) realloc(token, sizeof(char) * next_size);
@@ -36,6 +38,29 @@ static bool treat_symbol_as_operator(enum TOKENTYPE_E prev_token_type) {
         prev_token_type == T_SYMBOL_CLOSING_SQUARE_BRACKET;
 }
 
+static char get_char_value(char read_char, bool is_template_string) {
+    if(read_char == '\\' ) return '\\';
+    else if(read_char == '$' && is_template_string) return '$';
+    else if(read_char == '\'') return '\'';
+    else if(read_char == '"' ) return '"';
+    else if(read_char == '`' ) return '`';
+    else if(read_char == '?' ) return '?';
+    else if(read_char == '`' ) return '`';
+    else if(read_char == 'a') return '\a';
+    else if(read_char == 'b') return '\b';
+    else if(read_char == 'f') return '\f';
+    else if(read_char == 'n') return '\n';
+    else if(read_char == 'r') return '\r';
+    else if(read_char == 't') return '\t';
+    else if(read_char == 'v') return '\v';
+    else if(read_char == 't') return '\t';
+    else if(read_char == 't') return '\t';
+    else if(isodigit(read_char)) return ESCAPE_CHARACTER;
+    else if(read_char == 'x') return ESCAPE_CHARACTER;
+    else if(read_char == 'u' || read_char == 'U') return ESCAPE_CHARACTER;
+    else return CANCEL_CHARACTER;
+} 
+
 bool tokenize(const char* script, struct token_t* token, long* number_of_tokens) {
     const char* reserved_keywords[] = RESERVED_KEYWORDS;
     const char* valid_operators[] = VALID_OPERATORS;
@@ -51,7 +76,8 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
     bool success = true;
 
     bool is_word = false, is_number = false, is_comment = false,
-        is_string = false, is_symbol = false, is_operator = false, is_sign = false;
+        is_string = false, is_symbol = false, is_operator = false,
+        is_sign = false, is_template_string = false;
     short number_base_system = 0;
     bool exp_appended = false, decimal_appended = false, allow_char_as_num = false;
     bool reset_current_token = false;
@@ -61,14 +87,13 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
     char* token_buffer = (char*) malloc(sizeof(char) * 1);
     token_buffer[0] = '\0';
 
-    unsigned long line_no = 1L, col_no = 1L;
+    size_t line_no = 1, col_no = 0;
 
     for(size_t index = 0; (curr_char = script[index]) != '\0' && success; index++) {
+        col_no++;
         if((curr_char == '\n' && prev_char != '\r') || curr_char == '\r') {
             line_no++;
-            col_no = 1L;
-        } else if(curr_char != '\n') {
-            col_no++;
+            col_no = 1;
         }
         if(!is_comment) {
             if(!isspace(curr_char) && !isprint(curr_char)) {
@@ -77,13 +102,91 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                 success = false;
             }
             if(is_string) {
-                token_buffer = append_character(token_buffer, curr_char);
-                if(prev_char != '\\') {
+                if(prev_char == ESCAPE_CHARACTER) {
+                    char char_value = get_char_value(curr_char, is_template_string);
+                    if(char_value == CANCEL_CHARACTER) {
+                        raise_invalid_character_error(index, line_no, col_no,
+                            "Invalid escape sequence '%c'(ASCII %d)\n", curr_char, (int) curr_char);
+                        success = false;
+                    } else if(char_value == ESCAPE_CHARACTER) {
+                        char str_seq_text[17] = { 0 };
+                        unsigned str_seq_start_index = 0;
+                        int max_data_size = -1;
+                        int str_seq_max_len = -1;
+                        int str_seq_base = -1;
+                        digit_validator_t digit_validator = NULL;
+                        if(isodigit(curr_char)) {
+                            max_data_size = 1;
+                            str_seq_max_len = 3;
+                            str_seq_base = 8;
+                            digit_validator = &isodigit;
+                            str_seq_text[0] = curr_char;
+                            str_seq_start_index = 1;
+                        } else if(curr_char == 'u') {
+                            max_data_size = 2;
+                            str_seq_max_len = 4;
+                            str_seq_base = 16;
+                            digit_validator = &isxdigit;
+                        } else if(curr_char == 'U') {
+                            max_data_size = 4;
+                            str_seq_max_len = 8;
+                            str_seq_base = 16;
+                            digit_validator = &isxdigit;
+                        } else if(curr_char == 'x') {
+                            max_data_size = 8;
+                            str_seq_max_len = 16;
+                            str_seq_base = 16;
+                            digit_validator = &isxdigit;
+                        }
+
+                        while(str_seq_start_index < str_seq_max_len) {
+                            char ch = script[index+1];
+                            if(!digit_validator(ch)) break;
+                            index++;
+                            str_seq_text[str_seq_start_index] = ch;
+                            str_seq_start_index++;
+                            col_no++;
+                        }
+                        
+                        if(str_seq_start_index) {
+                            if((curr_char == 'u' || curr_char == 'U') && str_seq_start_index != str_seq_max_len) {
+                                raise_invalid_character_error(index, line_no, col_no,
+                                    "Invalid unicode sequence\n");
+                                success = false;   
+                            } else {
+                                uint64_t data_bytes = strtoull(str_seq_text, (char**) NULL, str_seq_base);
+                                int org_data_size = (int) strlen((char*) ((void*) &data_bytes));
+                                printf("-> %d", org_data_size);
+                                int data_size = MIN(max_data_size, org_data_size);
+                                size_t token_buffer_len = strlen(token_buffer);
+                                token_buffer = (char*) realloc(token_buffer, 
+                                    sizeof(char) * (token_buffer_len + data_size + 1));
+                                memset(&token_buffer[token_buffer_len], 0, data_size + 1);
+                                if(token_buffer) {
+                                    strcat(token_buffer, (char*) ((void*) &data_bytes));
+                                } else {
+                                    // Handle error
+                                }
+                            }
+                        } else {
+                            raise_invalid_character_error(index, line_no, col_no,
+                                "Invalid unicode sequence\n");
+                            success = false;  
+                        }
+                        curr_char = '\0';
+                    } else {
+                        token_buffer = append_character(token_buffer, char_value);
+                    }
+                } else if(curr_char == '\\') {
+                    curr_char = ESCAPE_CHARACTER;
+                } else {
                     if(curr_char == string_character) {
                         current_token_type = T_OPERAND_STRING_VALUE;
                         reset_current_token = true;
                         index++;
                         is_string = false;
+                    } else {
+                        token_buffer = append_character(token_buffer, curr_char);
                     }
                 }
             } else {
@@ -168,7 +271,7 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                             }
                         } 
                     } else if(number_base_system == 8) {
-                        if(curr_char < '0' || curr_char > '7') {
+                        if(!isodigit(curr_char)) {
                             allow_char_as_num = false;
                             if(isalnum(curr_char) || curr_char == '_' || curr_char == '.' || tolower(prev_char) == 'o') {
                                 // Raise invalid syntax error
@@ -299,10 +402,11 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                         allow_char_as_num = true;
                     } else if(curr_char == '#') {
                         is_comment = true;
-                    } else if(curr_char == '\'' || curr_char == '"') {
-                        token_buffer = append_character(token_buffer, curr_char);
+                    } else if(curr_char == '\'' || curr_char == '"' || curr_char == '`') {
+                        // token_buffer = append_character(token_buffer, curr_char);
                         string_character = curr_char;
                         is_string = true;
+                        if(curr_char == '`') is_template_string = true;
                     } else if(!isspace(curr_char)) {
                         token_buffer = append_character(token_buffer, curr_char);
                         long token_index = get_index_from(token_buffer, count_valid_operators, valid_operators);
@@ -349,7 +453,7 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
             prev_char = curr_char;
         }
     }
-    free(token_buffer);
+    if(token_buffer) free(token_buffer);
     return success;
 }
 
