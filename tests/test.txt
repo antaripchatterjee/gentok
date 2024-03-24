@@ -1,4 +1,3 @@
 def main(...) {
-    Pointer[Integer] p = null
-    print("Hello, World!")
+    print('\u236a Hello, World!')
 }

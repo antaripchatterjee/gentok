@@ -105,11 +105,16 @@ enum TOKENTYPE_E {
 #define RESERVED_KEYWORD_OFFSET ((long int) T_RESERVED_KEYWORD_AS)
 #define SYMBOL_TOKEN_OFFSET ((long int) T_SYMBOL_OPENING_PARANANTHESIS)
 
+#define ESCAPE_CHARACTER ((char) 27)
+#define CANCEL_CHARACTER ((char) 24)
+
 struct token_t {
     enum TOKENTYPE_E token_type;
     char* token_buffer;
     struct token_t* next_token;
 }; // struct token_t
+
+typedef int(*digit_validator_t)(int);
 
 #ifdef __cplusplus
 extern "C" {
