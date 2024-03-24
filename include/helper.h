@@ -36,6 +36,10 @@
     "[", "\\", "]", "{", "}" \
 }
 
+#define MIN(_A, _B) (_A > _B ? _B : _A)
+#define UCHAR(I) ((unsigned char) I)
+#define IS_LITTLE_ENDIAN (((unsigned char*)((unsigned int[]){1}))[0])
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus

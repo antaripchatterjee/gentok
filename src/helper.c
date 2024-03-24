@@ -9,7 +9,6 @@ int isodigit(int c) {
 }
 
 long get_index_from(const char* token_buffer, const long count, const char** list){
-    // const long int count = sizeof(list)/sizeof(char*);
     long int start_index = 0, end_index = count - 1;
     while(start_index <= end_index) {
         long int middle = start_index + (end_index - start_index)/2;

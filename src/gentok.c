@@ -111,30 +111,25 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                     } else if(char_value == ESCAPE_CHARACTER) {
                         char str_seq_text[17] = { 0 };
                         unsigned str_seq_start_index = 0;
-                        int max_data_size = -1;
                         int str_seq_max_len = -1;
                         int str_seq_base = -1;
                         digit_validator_t digit_validator = NULL;
                         if(isodigit(curr_char)) {
-                            max_data_size = 1;
                             str_seq_max_len = 3;
                             str_seq_base = 8;
                             digit_validator = &isodigit;
                             str_seq_text[0] = curr_char;
                             str_seq_start_index = 1;
                         } else if(curr_char == 'u') {
-                            max_data_size = 2;
                             str_seq_max_len = 4;
                             str_seq_base = 16;
                             digit_validator = &isxdigit;
                         } else if(curr_char == 'U') {
-                            max_data_size = 4;
                             str_seq_max_len = 8;
                             str_seq_base = 16;
                             digit_validator = &isxdigit;
                         } else if(curr_char == 'x') {
-                            max_data_size = 8;
-                            str_seq_max_len = 16;
+                            str_seq_max_len = 2;
                             str_seq_base = 16;
                             digit_validator = &isxdigit;
                         }
@@ -154,18 +149,67 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                                     "Invalid unicode sequence\n");
                                 success = false;   
                             } else {
-                                uint64_t data_bytes = strtoull(str_seq_text, (char**) NULL, str_seq_base);
-                                int org_data_size = (int) strlen((char*) ((void*) &data_bytes));
-                                printf("-> %d", org_data_size);
-                                int data_size = MIN(max_data_size, org_data_size);
-                                size_t token_buffer_len = strlen(token_buffer);
-                                token_buffer = (char*) realloc(token_buffer, 
-                                    sizeof(char) * (token_buffer_len + data_size + 1));
-                                memset(&token_buffer[token_buffer_len], 0, data_size + 1);
-                                if(token_buffer) {
-                                    strcat(token_buffer, (char*) ((void*) &data_bytes));
+                                size_t additional_space_sz = 0;
+                                uint32_t seq_as_uint = (uint32_t) strtoul(str_seq_text, (char**) NULL, str_seq_base);
+                                unsigned char seq_as_bytes[sizeof(uint32_t)];
+                                memmove(seq_as_bytes, &seq_as_uint, sizeof(uint32_t));
+                                if(!IS_LITTLE_ENDIAN) {
+                                    unsigned char _swap_temp = seq_as_bytes[0];
+                                    seq_as_bytes[0] = seq_as_bytes[3];
+                                    seq_as_bytes[3] = _swap_temp;
+                                    _swap_temp = seq_as_bytes[1];
+                                    seq_as_bytes[1] = seq_as_bytes[2];
+                                    seq_as_bytes[2] = _swap_temp; 
+                                }
+                                unsigned char utfBytes[5] = { 
+                                    UCHAR(0),
+                                    UCHAR(128), 
+                                    UCHAR(128),
+                                    UCHAR(128),
+                                    UCHAR(0)
+                                };
+                                if(seq_as_uint >= 0x0 && seq_as_uint <= 0x7f) {
+                                    // 1 Byte
+                                    additional_space_sz = 1;
+                                    utfBytes[0] = UCHAR(0) | seq_as_bytes[0];
+                                    utfBytes[1] = utfBytes[2] = utfBytes[3] = UCHAR(0);
+                                } else if(seq_as_uint <= 0x07ff) {
+                                    // 2 Bytes
+                                    additional_space_sz = 2;
+                                    utfBytes[0] = UCHAR(192) | ((seq_as_bytes[1] & UCHAR(7)) << 2) | ((seq_as_bytes[0] & UCHAR(192)) >> 6);
+                                    utfBytes[1] = utfBytes[1] | (seq_as_bytes[0] & UCHAR(63));
+                                    utfBytes[2] = utfBytes[3] = UCHAR(0);
+                                } else if(seq_as_uint <= 0xFFFF) {
+                                    // 3 Bytes
+                                    additional_space_sz = 3;
+                                    utfBytes[0] = UCHAR(224) | ((seq_as_bytes[1] & UCHAR(240)) >> 4);
+                                    utfBytes[1] = utfBytes[1] | ((seq_as_bytes[1] & UCHAR(15)) << 2) | ((seq_as_bytes[0] & UCHAR(192)) >> 6);
+                                    utfBytes[2] = utfBytes[2] | (seq_as_bytes[0] & UCHAR(63));
+                                    utfBytes[3] = UCHAR(0);
+                                } else if(seq_as_uint <= 0x10FFFF) {
+                                    // 4 Bytes
+                                    additional_space_sz = 4;
+                                    utfBytes[0] = UCHAR(240) | ((seq_as_bytes[2] & UCHAR(31)) >> 2);
+                                    utfBytes[1] = utfBytes[1] | ((seq_as_bytes[2] & UCHAR(3)) << 4) | ((seq_as_bytes[1] & UCHAR(240)) >> 4);
+                                    utfBytes[2] = utfBytes[2] | ((seq_as_bytes[1] & UCHAR(15)) << 2) | ((seq_as_bytes[0] & UCHAR(192)) >> 6);
+                                    utfBytes[3] = utfBytes[3] | (seq_as_bytes[0] & UCHAR(63));
+                                    printf("%x %x %x %x\n", utfBytes[0], utfBytes[1], utfBytes[2], utfBytes[3]);
                                 } else {
-                                    // Handle error
+                                    // Error
+                                    success = false;
+                                }
+                                
+                                if(success && additional_space_sz) {
+                                    size_t token_buffer_len = strlen(token_buffer);
+                                    token_buffer = (char*) realloc(token_buffer, 
+                                        sizeof(char) * (token_buffer_len + additional_space_sz + 1));
+                                    if(token_buffer) {
+                                        memset(&token_buffer[token_buffer_len], 0, additional_space_sz + 1);
+                                        memmove(&token_buffer[token_buffer_len], utfBytes, additional_space_sz);
+                                    } else {
+                                        // error
+                                        success = false;
+                                    }
                                 }
                             }
                         } else {
