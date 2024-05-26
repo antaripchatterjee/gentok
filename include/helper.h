@@ -65,7 +65,7 @@ int octal_seq_validator(char ch, int* esc_seq_char_count, char* esc_seq_str, cha
 int hex_seq_validator(char ch, int* esc_seq_char_count, char* esc_seq_str, char* esc_seq_err);
 int universal_code_seq_validator(char ch, int* esc_seq_char_count, char* esc_seq_str, char* esc_seq_err);
 int get_esc_seq_validation_rule(char esc_seq_char, esc_seq_validator_t* escape_seq_validator);
-int raise_error(const char* script, const char* title, size_t line_no, size_t column_no, size_t pos_index, const char* msgfmt, ...);
+int raise_error(const char* script, size_t line_start_pos, const char* title, size_t line_no, size_t column_no, size_t pos_index, const char* msgfmt, ...);
 
 #ifdef __cplusplus
 }

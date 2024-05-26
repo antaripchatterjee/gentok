@@ -1,4 +1,4 @@
 func main(argv string[...]) {
-    str string = 'Hello World \77'
+    str string = 'Hello World\41'
     Printf str
 }

@@ -1,7 +1,9 @@
 #ifdef MAKEFILECOMPILING
 #include "helper.h"
+#include "script.h"
 #else
 #include "../include/helper.h"
+#include "../include/script.h"
 #endif // MAKEFILECOMPILING
 #include <ctype.h>
 
@@ -126,24 +128,9 @@ long get_index_from(const char* token_buffer, const long count, const char** lis
 }
 
 
-int raise_error(const char* script, const char* title, size_t line_no, size_t col_no, size_t pos_index, const char* fmt, ...) {
+int raise_error(const char* script, size_t line_start_pos, const char* title, size_t line_no, size_t col_no, size_t pos_index, const char* fmt, ...) {
     int wrc = fprintf(stderr, "[ERROR::%zu,%zu;%zu] %s\n\n", line_no, col_no, pos_index, title);
-    char ch, pch = '\0';
-    size_t index = 0;
-    size_t curr_line_no = 1;
-    char* current_line = (char*) malloc(sizeof(char) * 1);
-    current_line[0] = '\0';
-    while((ch = script[index++]) != '\0') {
-        if(curr_line_no == line_no) {
-            current_line = append_character(current_line, ch);
-        } else if(curr_line_no > line_no) {
-            break;
-        }
-        if((ch == '\n' && pch != '\r') || ch == '\r') {
-            curr_line_no++;
-        }
-        pch = ch;
-    }
+    char* current_line = read_line_from_script(script, line_start_pos);
     int extra_space = fprintf(stderr, "  %zu| ", line_no);
     wrc += extra_space;
     wrc += fprintf(stderr, "%s\n", current_line);

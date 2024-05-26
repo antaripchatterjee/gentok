@@ -27,10 +27,11 @@ int main(int argc, const char* argv[]) {
         printf("number of tokens : %ld\n", number_of_tokens);
         struct token_t* t = &token;
         for(long i = 0; i < number_of_tokens; i++){
-            printf("token[%ld at %zu:%zu] -> %s : %d\n", i+1, t->pos.line_no, t->pos.col_no, t->token_buffer, (int) t->token_type);
+            printf("token[%zu:%zu;%zu] -> %s : %d\n", t->pos.line_no, t->pos.col_no, t->line_start_pos, t->token_buffer, (int) t->token_type);
             t = t->next_token;
         }
     }
+    free((void*) script);
     if(free_tokens(&token) == number_of_tokens)
         puts("\n\nTokens freed");
     else

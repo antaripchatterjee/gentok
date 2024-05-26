@@ -133,6 +133,7 @@ struct token_t {
     enum TOKENTYPE_E token_type;
     char* token_buffer;
     struct token_pos_t pos;
+    size_t line_start_pos;
     struct token_t* next_token;
 }; // struct token_t
 

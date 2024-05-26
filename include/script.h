@@ -5,18 +5,12 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define SCRIPT "import sys.{argv, print} as [argv, print]\n" \
-    "\ndef main(...) {\n" \
-    "\t# This is a comment\n" \
-    "\tfinal auto y = 0x78a3\n" \
-    "\tif argv.count < -2+4 {\n" \
-    "\t\tprint('Hello, World!')\n" \
-    "\t} else { \n" \
-    "\t\tforeach argv as [index, arg] {\n" \
-    "\t\t\tprint('ARGV[${index}] -> ${arg}')\n" \
-    "\t\t}\n" \
-    "\t}\n" \
-    "}\n"
+#define SCRIPT "func main(argv string[...]) {" \
+    "\tstr string = 'Hello World\\41'" \
+    "\tPrintf str" \
+    "}"
+
+#define ISLINEENDINGCHAR(CH) ((CH == '\0') || (CH == '\r') || (CH == '\n'))
 
 enum SCRIPT_RD_CODE {
     SCRIPT_RD_NOERR = 0,
@@ -33,6 +27,7 @@ enum SCRIPT_RD_CODE {
 extern "C" {
 #endif // __cplusplus
 char* read_script_from_file(const char* filename, enum SCRIPT_RD_CODE* script_rd_code_ptr);
+char* read_line_from_script(const char* script, size_t line_start_pos);
 #ifdef __cplusplus
 }
 #endif // __cplusplus

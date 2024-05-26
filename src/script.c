@@ -42,3 +42,12 @@ char* read_script_from_file(const char* filename, enum SCRIPT_RD_CODE* script_rd
     }
     return source_code;
 }
+
+char* read_line_from_script(const char* script, size_t line_start_pos) {
+    size_t index = line_start_pos;
+    for(;!ISLINEENDINGCHAR(script[index]); index++);
+    char* current_line = (char*) malloc(sizeof(char) * (index - line_start_pos + 1));
+    memset(current_line, 0, (index - line_start_pos + 1));
+    memmove(current_line, &(script[line_start_pos]), (index - line_start_pos));
+    return current_line;
+}
