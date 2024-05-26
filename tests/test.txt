@@ -1,3 +1,4 @@
-def main(...) {
-    print('\u236a Hello, World!')
+func main(argv string[...]) {
+    str string = 'Hello World \77'
+    Printf str
 }

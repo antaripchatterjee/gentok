@@ -15,6 +15,7 @@ int main(int argc, const char* argv[]) {
     struct token_t token = {
         .token_type = T_TOKEN_UNKNOWN,
         .token_buffer = NULL,
+        .pos = { 0UL, 0UL },
         .next_token = NULL
     };
 
@@ -26,13 +27,13 @@ int main(int argc, const char* argv[]) {
         printf("number of tokens : %ld\n", number_of_tokens);
         struct token_t* t = &token;
         for(long i = 0; i < number_of_tokens; i++){
-            printf("token[%ld] -> %s : %d\n", i+1, t->token_buffer, (int) t->token_type);
+            printf("token[%ld at %zu:%zu] -> %s : %d\n", i+1, t->pos.line_no, t->pos.col_no, t->token_buffer, (int) t->token_type);
             t = t->next_token;
         }
     }
     if(free_tokens(&token) == number_of_tokens)
-        puts("Successfully completed");
+        puts("\n\nTokens freed");
     else
-        puts("Failed to free the tokens");
+        puts("\n\nFailed to free the tokens");
     return 0;
 }

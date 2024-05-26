@@ -40,5 +40,12 @@ mkdirs_r:
 mkdir_o:
 	[ -d ./objects ] || mkdir ./objects
 
+test: all
+	@echo '=========== RUNNING TEST ==========='
+	@echo
+	./bin/debug/gentok ./tests/test.txt
+	@echo
+	@echo '============== TESTED =============='
+
 clean:
 	rm -rf ./bin ./lib ./objects

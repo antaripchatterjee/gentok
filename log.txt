@@ -1,0 +1,149 @@
+[2] prev_char is 0 and curr_char is 115
+[2] prev_char is 115 and curr_char is 116
+[2] prev_char is 116 and curr_char is 114
+[2] prev_char is 114 and curr_char is 117
+[2] prev_char is 117 and curr_char is 99
+[2] prev_char is 99 and curr_char is 116
+[1] prev_char is 116 and curr_char is 32
+[2] prev_char is 0 and curr_char is 32
+[2] prev_char is 32 and curr_char is 66
+[2] prev_char is 66 and curr_char is 105
+[2] prev_char is 105 and curr_char is 114
+[2] prev_char is 114 and curr_char is 100
+[1] prev_char is 100 and curr_char is 123
+[2] prev_char is 0 and curr_char is 123
+switched to line no: 2 curr_char: 10 prev_char: 123
+[1] prev_char is 123 and curr_char is 10
+switched to line no: 2 curr_char: 10 prev_char: 0
+[2] prev_char is 0 and curr_char is 10
+[2] prev_char is 10 and curr_char is 32
+[2] prev_char is 32 and curr_char is 32
+[2] prev_char is 32 and curr_char is 32
+[2] prev_char is 32 and curr_char is 32
+[2] prev_char is 32 and curr_char is 110
+[2] prev_char is 110 and curr_char is 97
+[2] prev_char is 97 and curr_char is 109
+[2] prev_char is 109 and curr_char is 101
+[1] prev_char is 101 and curr_char is 32
+[2] prev_char is 0 and curr_char is 32
+[2] prev_char is 32 and curr_char is 115
+[2] prev_char is 115 and curr_char is 116
+[2] prev_char is 116 and curr_char is 114
+[2] prev_char is 114 and curr_char is 105
+[2] prev_char is 105 and curr_char is 110
+[2] prev_char is 110 and curr_char is 103
+switched to line no: 3 curr_char: 10 prev_char: 103
+[1] prev_char is 103 and curr_char is 10
+switched to line no: 3 curr_char: 10 prev_char: 0
+[2] prev_char is 0 and curr_char is 10
+[2] prev_char is 10 and curr_char is 125
+switched to line no: 4 curr_char: 10 prev_char: 125
+[1] prev_char is 125 and curr_char is 10
+switched to line no: 4 curr_char: 10 prev_char: 0
+[2] prev_char is 0 and curr_char is 10
+switched to line no: 5 curr_char: 10 prev_char: 10
+[2] prev_char is 10 and curr_char is 10
+[2] prev_char is 10 and curr_char is 115
+[2] prev_char is 115 and curr_char is 116
+[2] prev_char is 116 and curr_char is 114
+[2] prev_char is 114 and curr_char is 117
+[2] prev_char is 117 and curr_char is 99
+[2] prev_char is 99 and curr_char is 116
+[1] prev_char is 116 and curr_char is 32
+[2] prev_char is 0 and curr_char is 32
+[2] prev_char is 32 and curr_char is 70
+[2] prev_char is 70 and curr_char is 105
+[2] prev_char is 105 and curr_char is 115
+[2] prev_char is 115 and curr_char is 104
+[1] prev_char is 104 and curr_char is 32
+[2] prev_char is 0 and curr_char is 32
+[2] prev_char is 32 and curr_char is 123
+switched to line no: 6 curr_char: 10 prev_char: 123
+[1] prev_char is 123 and curr_char is 10
+switched to line no: 6 curr_char: 10 prev_char: 0
+[2] prev_char is 0 and curr_char is 10
+[2] prev_char is 10 and curr_char is 32
+[2] prev_char is 32 and curr_char is 32
+[2] prev_char is 32 and curr_char is 32
+[2] prev_char is 32 and curr_char is 32
+[2] prev_char is 32 and curr_char is 110
+[2] prev_char is 110 and curr_char is 97
+[2] prev_char is 97 and curr_char is 109
+[2] prev_char is 109 and curr_char is 101
+[1] prev_char is 101 and curr_char is 32
+[2] prev_char is 0 and curr_char is 32
+[2] prev_char is 32 and curr_char is 115
+[2] prev_char is 115 and curr_char is 116
+[2] prev_char is 116 and curr_char is 114
+[2] prev_char is 114 and curr_char is 105
+[2] prev_char is 105 and curr_char is 110
+[2] prev_char is 110 and curr_char is 103
+switched to line no: 7 curr_char: 10 prev_char: 103
+[1] prev_char is 103 and curr_char is 10
+switched to line no: 7 curr_char: 10 prev_char: 0
+[2] prev_char is 0 and curr_char is 10
+[2] prev_char is 10 and curr_char is 125
+switched to line no: 8 curr_char: 10 prev_char: 125
+[1] prev_char is 125 and curr_char is 10
+switched to line no: 8 curr_char: 10 prev_char: 0
+[2] prev_char is 0 and curr_char is 10
+switched to line no: 9 curr_char: 10 prev_char: 10
+[2] prev_char is 10 and curr_char is 10
+[2] prev_char is 10 and curr_char is 115
+[2] prev_char is 115 and curr_char is 116
+[2] prev_char is 116 and curr_char is 114
+[2] prev_char is 114 and curr_char is 117
+[2] prev_char is 117 and curr_char is 99
+[2] prev_char is 99 and curr_char is 116
+[1] prev_char is 116 and curr_char is 32
+[2] prev_char is 0 and curr_char is 32
+[2] prev_char is 32 and curr_char is 68
+[2] prev_char is 68 and curr_char is 111
+[2] prev_char is 111 and curr_char is 103
+[1] prev_char is 103 and curr_char is 32
+[2] prev_char is 0 and curr_char is 32
+[2] prev_char is 32 and curr_char is 123
+switched to line no: 10 curr_char: 10 prev_char: 123
+[1] prev_char is 123 and curr_char is 10
+switched to line no: 10 curr_char: 10 prev_char: 0
+[2] prev_char is 0 and curr_char is 10
+[2] prev_char is 10 and curr_char is 32
+[2] prev_char is 32 and curr_char is 32
+[2] prev_char is 32 and curr_char is 32
+[2] prev_char is 32 and curr_char is 32
+[2] prev_char is 32 and curr_char is 110
+[2] prev_char is 110 and curr_char is 97
+[2] prev_char is 97 and curr_char is 109
+[2] prev_char is 109 and curr_char is 101
+[1] prev_char is 101 and curr_char is 32
+[2] prev_char is 0 and curr_char is 32
+[2] prev_char is 32 and curr_char is 115
+[2] prev_char is 115 and curr_char is 116
+[2] prev_char is 116 and curr_char is 114
+[2] prev_char is 114 and curr_char is 105
+[2] prev_char is 105 and curr_char is 110
+[2] prev_char is 110 and curr_char is 103
+switched to line no: 11 curr_char: 10 prev_char: 103
+[1] prev_char is 103 and curr_char is 10
+switched to line no: 11 curr_char: 10 prev_char: 0
+[2] prev_char is 0 and curr_char is 10
+[2] prev_char is 10 and curr_char is 125
+switched to line no: 12 curr_char: 10 prev_char: 125
+[1] prev_char is 125 and curr_char is 10
+switched to line no: 12 curr_char: 10 prev_char: 0
+[2] prev_char is 0 and curr_char is 10
+switched to line no: 13 curr_char: 10 prev_char: 10
+[2] prev_char is 10 and curr_char is 10
+[2] prev_char is 10 and curr_char is 45
+[1] prev_char is 45 and curr_char is 49
+[2] prev_char is 0 and curr_char is 49
+[2] prev_char is 49 and curr_char is 48
+[1] prev_char is 48 and curr_char is 43
+[2] prev_char is 0 and curr_char is 43
+[1] prev_char is 43 and curr_char is 49
+[2] prev_char is 0 and curr_char is 49
+[1] prev_char is 49 and curr_char is 32
+[2] prev_char is 0 and curr_char is 32
+[ERR] Invalid token found at position 103::(13,7)
+	[2] prev_char is 32 and curr_char is 36
+Successfully completed
