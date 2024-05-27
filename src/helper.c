@@ -63,9 +63,9 @@ int universal_code_seq_validator(char ch, int* esc_seq_char_count, char* esc_seq
         int pos = max_esc_seq_char_count - ((*esc_seq_char_count)--);
         esc_seq_str[pos] = ch;
     } else {
-        sprintf(esc_seq_err, "Invalid string literal, '\\%c' should be used "
-            "with %d following hex digits but found '%c' (ASCII %d)",
-            universal_code_flag, max_esc_seq_char_count, ch, ch);
+        sprintf(esc_seq_err, "Invalid string literal, incomplete universal character name"
+            " \\%c%s. Unexpected occurence of '%s' (ASCII %d)",
+            universal_code_flag, esc_seq_str, REPRCHAR(ch), ch);
         max_esc_seq_char_count = 0;
         return 0;
     }
@@ -130,7 +130,7 @@ long get_index_from(const char* token_buffer, const long count, const char** lis
 
 int raise_error(const char* script, size_t line_start_pos, const char* title, size_t line_no, size_t col_no, size_t pos_index, const char* fmt, ...) {
     int wrc = fprintf(stderr, "[ERROR::%zu,%zu;%zu] %s\n\n", line_no, col_no, pos_index, title);
-    char* current_line = read_line_from_script(script, line_start_pos);
+    char* current_line = read_partial_script(script, line_start_pos);
     int extra_space = fprintf(stderr, "  %zu| ", line_no);
     wrc += extra_space;
     wrc += fprintf(stderr, "%s\n", current_line);

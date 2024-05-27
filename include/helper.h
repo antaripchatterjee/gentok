@@ -10,27 +10,14 @@
 
 #define RESERVED_KEYWORDS { \
     "bool", "break", "char", "continue", \
-    "else", "f128", "f32", "f64", "false", \
-    "for", "func", "i16", "i32", "i64", "i8", \
-    "if", "match", "mixin", "new", "null", \
-    "raise", "repeat", "rescue", "return", \
-    "string", "struct", "template", "true", \
-    "u16", "u32", "u64", "u8", "union", \
-    "until", "when", "while" \
+    "else", "enum", "f128", "f32", "f64", \
+    "false", "for", "func", "i16", "i32", \
+    "i64", "i8", "if", "match", "mixin", \
+    "new", "null", "raise", "repeat", \
+    "rescue", "return", "string", "struct", \
+    "template", "true", "u16", "u32", \
+    "u64", "u8", "union", "until", "when", "while" \
 }
-/*
-#define VALID_OPERATORS { \
-    "!", "!=", "%%", "%%=", \
-    "&", "&&", "&=", "*", \
-    "**", "**=", "*=", "+", \
-    "+=", "-", "-=", "..", \
-    "/", "/=", ":", ":=", "<", \
-    "<<", "<<=", "<=", "=", \
-    "==", ">", ">=", ">>", \
-    ">>=", "?", "??", "^", \
-    "^=", "|", "|=", "||", "~" \
-}
-*/
 
 #define VALID_SYMBOLS { \
     "!", "!=", "%", "%=", "&", \
@@ -50,6 +37,17 @@
 #define IS_LITTLE_ENDIAN (((unsigned char*)((unsigned int[]){1}))[0])
 #define ESCAPE_SEQ_MAX_LEN 9
 #define ESCAPE_SEQ_ERR_MSG_SZ 128
+#define REPRCHAR(CH) (CH == '\\' ? "\\\\" \
+    : CH == '\'' ? "\\\'" \
+    : CH == '\"' ? "\\\"" \
+    : CH == '`'  ? "\\`"  \
+    : CH == '\a' ? "\\a"  \
+    : CH == '\b' ? "\\b"  \
+    : CH == '\f' ? "\\f"  \
+    : CH == '\n' ? "\\n"  \
+    : CH == '\r' ? "\\r"  \
+    : CH == '\v' ? "\\v"  \
+    : CH == '\t' ? "\\t" : (const char*)((char[]){ CH }))
 
 typedef int(*esc_seq_validator_t)(char, int*, char*, char*);
 

@@ -27,7 +27,7 @@ enum SCRIPT_RD_CODE {
 extern "C" {
 #endif // __cplusplus
 char* read_script_from_file(const char* filename, enum SCRIPT_RD_CODE* script_rd_code_ptr);
-char* read_line_from_script(const char* script, size_t line_start_pos);
+char* read_partial_script(const char* script, size_t line_start_pos);
 #ifdef __cplusplus
 }
 #endif // __cplusplus

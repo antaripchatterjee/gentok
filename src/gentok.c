@@ -33,6 +33,17 @@ static bool treat_symbol_as_operator(enum TOKENTYPE_E prev_token_type) {
         prev_token_type == T_SYMBOL_SIMPLE_SQRBRC;
 }
 
+
+static bool is_operator(enum TOKENTYPE_E token_type) {
+    // TODO: implement logic to find if token_type is operator
+    return false;
+}
+
+static bool not_allowed_after_operator(enum TOKENTYPE_E token_type) {
+    // TODO: implement logic to find if token_type is not allowed after operator
+    return false;
+}
+
 bool tokenize(const char* script, struct token_t* token, long* number_of_tokens) {
     const char* reserved_keywords[] = RESERVED_KEYWORDS;
     const char* valid_symbols[] = VALID_SYMBOLS;
@@ -70,13 +81,13 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
         if(!is_comment) {
             if(!isspace(curr_char) && !isprint(curr_char)) {
                 raise_error(script, line_start_pos, "INVALID CHARACTER", line_no, col_no, index,
-                    "Found invalid character '%c'(ASCII %d)\n", curr_char, (int) curr_char);
+                    "Found invalid character %s (ASCII %d)\n", REPRCHAR(curr_char), curr_char);
                 success = false;
             }
             if(is_string) {
                 if((curr_char == '\n' || curr_char == '\r') && !is_template_string) {
                     raise_error(script, line_start_pos, "INVALID TOKEN", string_pos.line_no, string_pos.col_no, index, 
-                        "Invalid string literal, missing string ending character %c", string_character);
+                        "Invalid string literal, missing string ending character %s", REPRCHAR(string_character));
                     success = false;
                 }
                 if(success) {
@@ -155,7 +166,8 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                                 // Raise invalid syntax error
                                 allow_char_as_num = false;
                                 raise_error(script, line_start_pos, "INVALID CHARACTER", line_no, col_no, index,
-                                    "Found '%c' (ASCII %d), invalid number sequence.\n", curr_char, curr_char
+                                    "Unexpected occurence of '%s' (ASCII %d),"
+                                    " invalid number sequence.\n", REPRCHAR(curr_char), curr_char
                                 );
                                 success = false;
                             } else {
@@ -175,7 +187,8 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                                 // Raise invalid syntax error
                                 allow_char_as_num = false;
                                 raise_error(script, line_start_pos, "INVALID CHARACTER", line_no, col_no, index,
-                                    "Found '%c' (ASCII %d), not a valid decimal digit.\n", curr_char, curr_char
+                                    "Unexpected occurence of '%s' (ASCII %d),"
+                                    " not a valid decimal digit.\n", REPRCHAR(curr_char), curr_char
                                 );
                                 success = false;
                             } else {
@@ -188,7 +201,8 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                             if(isalnum(curr_char) || curr_char == '_' || curr_char == '.' || tolower(prev_char) == 'b') {
                                 // Raise invalid syntax error
                                 raise_error(script, line_start_pos, "INVALID CHARACTER", line_no, col_no, index,
-                                    "Found '%c' (ASCII %d), not a valid binary digit.\n", curr_char, curr_char
+                                    "Unexpected occurence of '%s' (ASCII %d),"
+                                    " not a valid binary digit.\n", REPRCHAR(curr_char), curr_char
                                 );
                                 success = false;
                             }
@@ -199,7 +213,8 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                             if(isalnum(curr_char) || curr_char == '_' || curr_char == '.' || tolower(prev_char) == 'o') {
                                 // Raise invalid syntax error
                                 raise_error(script, line_start_pos, "INVALID CHARACTER", line_no, col_no, index,
-                                    "Found '%c' (ASCII %d), not a valid octal digit.\n", curr_char, curr_char
+                                    "Unexpected occurence of '%s' (ASCII %d),"
+                                    " not a valid octal digit.\n", REPRCHAR(curr_char), curr_char
                                 );
                                 success = false;
                             }
@@ -210,7 +225,8 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                             if(isalpha(curr_char) || curr_char == '_' || curr_char == '.' || tolower(prev_char) == 'x') {
                                 // Raise invalid syntax error
                                 raise_error(script, line_start_pos, "INVALID CHARACTER", line_no, col_no, index,
-                                    "Found '%c' (ASCII %d), not a valid hexadecimal digit.\n", curr_char, curr_char
+                                    "Unexpected occurence of '%s' (ASCII %d),"
+                                    " not a valid hexadecimal digit.\n", REPRCHAR(curr_char), curr_char
                                 );
                                 success = false;
                             }
@@ -229,7 +245,8 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                             // Raise the invalid syntax error
                             allow_char_as_num = false;
                             raise_error(script, line_start_pos, "INVALID CHARACTER", line_no, col_no, index,
-                                "Found '%c', not a valid decimal digit.\n", curr_char
+                                "Unexpected occurence of '%s' (ASCII %d),"
+                                " not a valid decimal digit.\n", REPRCHAR(curr_char), curr_char
                             );
                             success = false;
                         } else {
@@ -239,7 +256,8 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                         //  Raise invalid number base error
                         allow_char_as_num = false;
                         raise_error(script, line_start_pos, "INVALID CHARACTER", line_no, col_no, index,
-                            "Found '%c', could not identify the base of the number.\n", curr_char
+                            "Unexpected occurence of '%s' (ASCII %d),"
+                            " could not identify the base of the number.\n", REPRCHAR(curr_char), curr_char
                         );
                         success = false;
                     }
@@ -260,7 +278,7 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                 } else if(is_sign) {
                     if(isspace(curr_char)) {
                         continue;
-                    } else if(isalnum(curr_char) || curr_char == '_') {
+                    } else if(isalnum(curr_char) || curr_char == '_' || curr_char == '(' || curr_char == '[') {
                         // add the token as unary operator and reset the token buffer
                         current_token_type = token_buffer[strlen(token_buffer) - 1] == '+'
                             ? T_OPERATOR_SIGN_PLUS : T_OPERATOR_SIGN_MINUS;
@@ -273,7 +291,8 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                         // Raise syntax error
                         is_sign = false;
                         raise_error(script, line_start_pos, "INVALID CHARACTER", line_no, col_no, index,
-                            "Found '%c', invalid symbol after unary sign.\n", curr_char
+                            "Unexpected occurence of '%s' (ASCII %d),"
+                            " invalid symbol after unary sign.\n", REPRCHAR(curr_char), curr_char
                         );
                         success = false;
                     }
@@ -312,7 +331,14 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                                 is_sign = true;
                             } else {
                                 current_token_type = (enum TOKENTYPE_E) (token_index + SYMBOL_TOKEN_OFFSET);
-                                is_symbol = true;
+                                if(is_operator(prev_token_type) && not_allowed_after_operator(current_token_type)) {
+                                    raise_error(script, line_start_pos, "INVALID TOKEN",
+                                    line_no, col_no, index,
+                                    "Unexpected occurence of symbol %s after an operator\n", token_buffer);
+                                    success = false;
+                                } else {
+                                    is_symbol = true;
+                                }
                             }
                         } else {
                             // Raise invalid token error
@@ -366,7 +392,7 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
     if (success) {
         if(is_string) {
             raise_error(script, line_start_pos, "INVALID TOKEN", string_pos.line_no, string_pos.col_no, strlen(script)-1, 
-                "Invalid string literal, missing string ending character %c", string_character);
+                "Invalid string literal, missing string ending character %s", REPRCHAR(string_character));
             success = false;
         }
     }
