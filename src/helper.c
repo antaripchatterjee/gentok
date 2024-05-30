@@ -111,7 +111,7 @@ int get_esc_seq_validation_rule(char esc_seq_char, esc_seq_validator_t* escape_s
     }
 }
 
-long get_index_from(const char* token_buffer, const long count, const char** list){
+long get_token_index(const char* token_buffer, const long count, const char** list){
     long int start_index = 0, end_index = count - 1;
     while(start_index <= end_index) {
         long int middle = start_index + (end_index - start_index)/2;

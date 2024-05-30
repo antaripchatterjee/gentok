@@ -33,10 +33,11 @@
 }
 
 #define MIN(_A, _B) (_A > _B ? _B : _A)
+#define MAX(_A, _B) (_A < _B ? _B : _A)
 #define UCHAR(I) ((unsigned char) I)
 #define IS_LITTLE_ENDIAN (((unsigned char*)((unsigned int[]){1}))[0])
 #define ESCAPE_SEQ_MAX_LEN 9
-#define ESCAPE_SEQ_ERR_MSG_SZ 128
+#define ERROR_MSG_SIZE 128
 #define REPRCHAR(CH) (CH == '\\' ? "\\\\" \
     : CH == '\'' ? "\\\'" \
     : CH == '\"' ? "\\\"" \
@@ -57,7 +58,7 @@ extern "C" {
 
 int isodigit(int c);
 int isbdigit(int c);
-long get_index_from(const char* token_buffer, const long count, const char** list);
+long get_token_index(const char* token_buffer, const long count, const char** list);
 char* append_character(char* buffer, char ch);
 int octal_seq_validator(char ch, int* esc_seq_char_count, char* esc_seq_str, char* esc_seq_err);
 int hex_seq_validator(char ch, int* esc_seq_char_count, char* esc_seq_str, char* esc_seq_err);

@@ -1,5 +1,4 @@
 func main(argv string[...]) {
     str string = 'Hello World\41'
-    p := -(0.1e4---8)
     Printf str
 }
