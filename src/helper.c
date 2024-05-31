@@ -129,13 +129,18 @@ long get_token_index(const char* token_buffer, const long count, const char** li
 
 
 int raise_error(const char* script, size_t line_start_pos, const char* title, size_t line_no, size_t col_no, size_t pos_index, const char* fmt, ...) {
-    int wrc = fprintf(stderr, "[ERROR::%zu,%zu;%zu] %s\n\n", line_no, col_no, pos_index, title);
     char* current_line = read_partial_script(script, line_start_pos);
+    if(!current_line) {
+        fprintf(stderr, "System error!\n\n");
+        return -1;
+    }
+    size_t col_no_temp = col_no == (size_t) -1 ? (strlen(current_line)+1) : col_no;
+    int wrc = fprintf(stderr, "[ERROR::%zu,%zu;%zu] %s\n\n", line_no, col_no_temp, pos_index, title);
     int extra_space = fprintf(stderr, "  %zu| ", line_no);
     wrc += extra_space;
     wrc += fprintf(stderr, "%s\n", current_line);
     char padfmt[32] = { 0 };
-    sprintf(padfmt, "%%%zus", col_no+extra_space+1);
+    sprintf(padfmt, "%%%zus", col_no_temp+extra_space+1);
     wrc += fprintf(stderr, padfmt, "^\n");
     va_list args;
     va_start(args, fmt);

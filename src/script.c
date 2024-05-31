@@ -3,6 +3,7 @@
 #else
 #include "../include/script.h"
 #endif // MAKEFILECOMPILING
+#include <ctype.h>
 
 char* read_script_from_file(const char* filename, enum SCRIPT_RD_CODE* script_rd_code_ptr) {
     FILE* source_fp = fopen(filename, "r");
@@ -15,7 +16,24 @@ char* read_script_from_file(const char* filename, enum SCRIPT_RD_CODE* script_rd
         fclose(source_fp);
         return NULL;
     }
-    const long buffersize = ftell(source_fp)+2;
+    long seek_cur_offset = 0L;
+    int ch;
+    do {
+        seek_cur_offset--;
+        if(fseek(source_fp, seek_cur_offset, SEEK_END)) {
+            *script_rd_code_ptr = SCRIPT_RD_FSIZEERR;
+            fclose(source_fp);
+            return NULL;
+        }
+        ch = fgetc(source_fp);
+    } while(isspace(ch));
+    if(fseek(source_fp, 0L, SEEK_END)) {
+        *script_rd_code_ptr = SCRIPT_RD_FSIZEERR;
+        fclose(source_fp);
+        return NULL;
+    }
+
+    const long buffersize = ftell(source_fp) + seek_cur_offset + 3;
     if(fseek(source_fp, 0L, SEEK_SET)) {
         *script_rd_code_ptr = SCRIPT_RD_FPRESETERR;
         fclose(source_fp);

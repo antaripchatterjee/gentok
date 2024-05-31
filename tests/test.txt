@@ -1,4 +1,7 @@
 func main(argv string[...]) {
-    str string = 'Hello World\41'
-    Printf str
+    for i i32 : 0 .. 100; i % 2 == 0 {
+        Printf '%d is even number' i
+    } else {
+        Printf '%d is odd number' i
+    }
 }

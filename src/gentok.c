@@ -8,9 +8,7 @@
 
 static bool check_cbstack(enum TOKENTYPE_E** cbstack_ptr, long* cbstack_size_ptr, enum TOKENTYPE_E cbid, char* error_msg) {
     bool result = true;
-    
     if(cbid == T_SYMBOL_SIMPLE_PARANO || cbid == T_SYMBOL_SIMPLE_CURLBRO || cbid == T_SYMBOL_SIMPLE_SQRBRO) {
-        printf("---> %s %ld\n", TYPE_TO_TOKEN(cbid), *cbstack_size_ptr);
         if(*cbstack_ptr) {
             *cbstack_ptr = (enum TOKENTYPE_E*) realloc(*cbstack_ptr, sizeof(enum TOKENTYPE_E) * (*cbstack_size_ptr));
             if(*cbstack_ptr) {
@@ -30,7 +28,6 @@ static bool check_cbstack(enum TOKENTYPE_E** cbstack_ptr, long* cbstack_size_ptr
             (*cbstack_size_ptr)++;
         }
     } else if(cbid == T_SYMBOL_SIMPLE_PARANC || cbid == T_SYMBOL_SIMPLE_CURLBRC || cbid == T_SYMBOL_SIMPLE_SQRBRC) {
-        printf("===> %s %ld\n", TYPE_TO_TOKEN(cbid), *cbstack_size_ptr);
         if(*cbstack_size_ptr > 0 && *cbstack_ptr) {
             enum TOKENTYPE_E cb_type = (*cbstack_ptr)[(*cbstack_size_ptr) - 1];
             if((cbid == T_SYMBOL_SIMPLE_PARANC && cb_type != T_SYMBOL_SIMPLE_PARANO)
@@ -39,8 +36,8 @@ static bool check_cbstack(enum TOKENTYPE_E** cbstack_ptr, long* cbstack_size_ptr
                 enum TOKENTYPE_E expected_cb_type = cb_type == T_SYMBOL_SIMPLE_PARANO 
                     ? T_SYMBOL_SIMPLE_PARANC : cb_type == T_SYMBOL_SIMPLE_CURLBRO
                     ? T_SYMBOL_SIMPLE_CURLBRC : T_SYMBOL_SIMPLE_SQRBRC;
-                sprintf(error_msg, "Invalid pair of code block. Found '%s' but expected '%s'\n",
-                    TYPE_TO_TOKEN(cbid), TYPE_TO_TOKEN(expected_cb_type));
+                sprintf(error_msg, "Missing end of declaration '%s', found '%s'\n",
+                    TYPE_TO_TOKEN(expected_cb_type), TYPE_TO_TOKEN(cbid));
                     result = false;
                     free(*cbstack_ptr);
                     *cbstack_ptr = NULL;
@@ -535,9 +532,22 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
         }
     }
     if(cbstack || cbstack_size > 0) {
+        memset(static_error_msg, 0, ERROR_MSG_SIZE);
+        if(success) {
+            if(cbstack){
+                enum TOKENTYPE_E cb_type = cbstack[cbstack_size-1];
+                enum TOKENTYPE_E expected_cb_type = cb_type == T_SYMBOL_SIMPLE_PARANO 
+                        ? T_SYMBOL_SIMPLE_PARANC : cb_type == T_SYMBOL_SIMPLE_CURLBRO
+                        ? T_SYMBOL_SIMPLE_CURLBRC : T_SYMBOL_SIMPLE_SQRBRC;
+                sprintf(static_error_msg, "Missing end of declaration '%s'\n", TYPE_TO_TOKEN(expected_cb_type));
+            } else {
+                strcpy(static_error_msg, "Syntax error");
+            }
+            raise_error(script, line_start_pos, "SYNTAX ERROR", line_no-1, -1, 
+                strlen(script)-1, static_error_msg);
+            success = false;
+        }
         if(cbstack) free(cbstack);
-        raise_error(script, line_start_pos, "SYNTAX ERROR", line_no-1, col_no, strlen(script)-1, "Missing code block");
-        success = false;
     }
     if(token_buffer) free(token_buffer);
     return success;
