@@ -1,5 +1,11 @@
-func main(argv string[...]) {
-    for i i32 : 0 .. 100; i % 2 == 0 {
+typedef myfunc_t :: func(int) bool
+
+func main(argv string[]) {
+
+    even_odd_finder myfunc_t = @(v i32) -> v % 2 == 0
+
+    arr := 0 .. 1000 # list of 1001 i32 elements
+    for i : arr; even_odd_finder(i) {
         Printf '%d is even number' i
     } else {
         Printf '%d is odd number' i

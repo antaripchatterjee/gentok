@@ -1,9 +1,7 @@
 #ifndef __SCRIPT_H__
 #define __SCRIPT_H__
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <stddef.h>
 
 #define SCRIPT "func main(argv string[...]) {" \
     "\tstr string = 'Hello World\\41'" \

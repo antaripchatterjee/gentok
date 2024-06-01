@@ -1,36 +1,7 @@
 #ifndef __HELPER_H__
 #define __HELPER_H__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdarg.h>
-
-#define RESERVED_KEYWORDS { \
-    "bool", "break", "char", "continue", \
-    "else", "enum", "f128", "f32", "f64", \
-    "false", "finally", "for", "func", \
-    "i16", "i32", "i64", "i8", "if", "match", \
-    "mixin", "new", "null", "raise", "repeat", \
-    "rescue", "return", "string", "struct", \
-    "template", "true", "u16", "u32", \
-    "u64", "u8", "union", "until", "when", "while" \
-}
-
-#define VALID_SYMBOLS { \
-    "!", "!=", "%", "%=", "&", \
-    "&&", "&=", "(", ")", "*", \
-    "**", "**=", "*=", "+", \
-    "+=", ",", "-", "-=", "->", \
-    ".", "..", "...", "/", "/=", \
-    ":", "::", ":=", ";", "<", \
-    "<<", "<<=", "<=", "=", "==", \
-    ">", ">=", ">>", ">>=", "?", \
-    "??", "@", "[", "]", "^", "^=", \
-    "{", "|", "|=", "||", "}", "~" \
-}
+#include <stddef.h>
 
 #define MIN(_A, _B) (_A > _B ? _B : _A)
 #define MAX(_A, _B) (_A < _B ? _B : _A)

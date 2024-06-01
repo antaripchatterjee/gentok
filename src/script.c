@@ -3,6 +3,10 @@
 #else
 #include "../include/script.h"
 #endif // MAKEFILECOMPILING
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <ctype.h>
 
 char* read_script_from_file(const char* filename, enum SCRIPT_RD_CODE* script_rd_code_ptr) {

@@ -11,17 +11,20 @@ all: gentok.a main.o
 release: install main.o
 	$(CC) $(CFLAGS) $(MACROS) -I$(INCLUDES) ./objects/main.o ./lib/release/gentok.a -s -o ./bin/release/gentok
 
-install: mkdirs_r mkdir_o script.o helper.o gentok.o
-	$(AR) -rcs ./lib/release/gentok.a ./objects/script.o ./objects/helper.o ./objects/gentok.o
+install: mkdirs_r mkdir_o script.o helper.o token.o gentok.o 
+	$(AR) -rcs ./lib/release/gentok.a ./objects/script.o ./objects/helper.o ./objects/token.o  ./objects/gentok.o
 
-gentok.a: mkdirs_d mkdir_o script.o helper.o gentok.o
-	$(AR) -rc ./lib/debug/gentok.a ./objects/script.o ./objects/helper.o ./objects/gentok.o
+gentok.a: mkdirs_d mkdir_o script.o helper.o token.o gentok.o
+	$(AR) -rc ./lib/debug/gentok.a ./objects/script.o ./objects/helper.o ./objects/token.o ./objects/gentok.o
 
 script.o: ./src/script.c
 	$(CC) $(CFLAGS) $(MACROS) -I$(INCLUDES) -c ./src/script.c -o ./objects/script.o
 
 helper.o: ./src/helper.c
 	$(CC) $(CFLAGS) $(MACROS) -I$(INCLUDES) -c ./src/helper.c -o ./objects/helper.o
+
+token.o: ./src/token.c
+	$(CC) $(CFLAGS) $(MACROS) -I$(INCLUDES) -c ./src/token.c -o ./objects/token.o
 
 gentok.o: ./src/gentok.c
 	$(CC) $(CFLAGS) $(MACROS) -I$(INCLUDES) -c ./src/gentok.c -o ./objects/gentok.o

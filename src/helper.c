@@ -5,6 +5,11 @@
 #include "../include/helper.h"
 #include "../include/script.h"
 #endif // MAKEFILECOMPILING
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdarg.h>
 #include <ctype.h>
 
 char* append_character(char* buffer, char ch) {

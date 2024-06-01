@@ -4,6 +4,9 @@
 #include "./include/gentok.h"
 #endif // MAKEFILECOMPILING
 
+#include <stdio.h>
+#include <stdlib.h>
+
 int main(int argc, const char* argv[]) {
     enum SCRIPT_RD_CODE script_rd_code = SCRIPT_RD_NOERR;
     const char* script = argc > 1 ? (const char*)
