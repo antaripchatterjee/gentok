@@ -133,6 +133,15 @@ long get_token_index(const char* token_buffer, const long count, const char** li
 }
 
 
+char* read_partial_script(const char* script, size_t line_start_pos) {
+    size_t index = line_start_pos;
+    for(;!ISLINEENDINGCHAR(script[index]); index++);
+    char* current_line = (char*) malloc(sizeof(char) * (index - line_start_pos + 1));
+    memset(current_line, 0, (index - line_start_pos + 1));
+    memmove(current_line, &(script[line_start_pos]), (index - line_start_pos));
+    return current_line;
+}
+
 int raise_error(const char* script, size_t line_start_pos, const char* title, size_t line_no, size_t col_no, size_t pos_index, const char* fmt, ...) {
     char* current_line = read_partial_script(script, line_start_pos);
     if(!current_line) {

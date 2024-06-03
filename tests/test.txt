@@ -1,13 +1,16 @@
-typedef myfunc_t :: func(int) bool
+typedef myfunc_t :: func(int) bool;
 
 func main(argv string[]) {
+    even_odd_finder myfunc_t = @(v i32) -> v % 2 == 0;
 
-    even_odd_finder myfunc_t = @(v i32) -> v % 2 == 0
-
-    arr := 0 .. 1000 # list of 1001 i32 elements
-    for i : arr; even_odd_finder(i) {
-        Printf '%d is even number' i
+    arr := 0 .. 1000; # list of 1001 i32 elements
+    soe, soo := for i : arr; even_odd_finder(i) {
+        soe += i;
     } else {
-        Printf '%d is odd number' i
+        soo += i;
+    } finally {
+        return soe, soo;
     }
+    Printf 'Sum of even numbers is %d\n' soe;
+    Printf 'Sum of odd numbers is %d\n' soo;
 }

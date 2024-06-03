@@ -84,7 +84,7 @@ enum TOKENTYPE_E {
     T_RESERVED_KEYWORD_TYPE_F32,
     T_RESERVED_KEYWORD_TYPE_F64,
     T_RESERVED_KEYWORD_CONSTANT_FALSE,
-    T_RESERVED_KEYWORD_CONSTANT_FINALLY,
+    T_RESERVED_KEYWORD_STATEMENT_FINALLY,
     T_RESERVED_KEYWORD_STATEMENT_FOR,
     T_RESERVED_KEYWORD_STATEMENT_FUNC,
     T_RESERVED_KEYWORD_TYPE_I16,
@@ -164,13 +164,16 @@ extern "C" {
 #endif // __cplusplus
 
 const char* stringify_token(enum TOKENTYPE_E token_type);
+bool is_statement_token(enum TOKENTYPE_E token_type);
 bool is_datatype_token(enum TOKENTYPE_E token_type);
 bool is_bracket_token(enum TOKENTYPE_E token_type);
-bool is_possible_operand(enum TOKENTYPE_E token_type);
+bool is_possible_operand(enum TOKENTYPE_E token_type, int prev_or_current);
+bool is_sign_token(enum TOKENTYPE_E token_type);
 bool is_unary_operator(enum TOKENTYPE_E token_type);
 bool is_binary_operator(enum TOKENTYPE_E token_type);
 bool is_assignment_operator(enum TOKENTYPE_E token_type);
-bool not_allowed_after_operator(enum TOKENTYPE_E token_type);
+bool is_allowed_with_binary_operator(enum TOKENTYPE_E token_type);
+bool is_allowed_with_unary_operator(enum TOKENTYPE_E token_type);
 bool is_allowed_before_datatype(enum TOKENTYPE_E token_type);
 
 #ifdef __cplusplus

@@ -102,7 +102,7 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
 
     bool is_word = false, is_number = false, is_comment = false,
         is_string = false, is_symbol = false, is_new_line = false,
-        is_sign = false, is_template_string = false;
+        is_template_string = false;
     short number_base_system = 0;
     bool exp_appended = false, decimal_appended = false, allow_char_as_num = false;
     bool reset_current_token = false;
@@ -327,27 +327,6 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                         number_base_system = 0;
                         exp_appended = decimal_appended = allow_char_as_num = false;
                     }
-                } else if(is_sign) {
-                    if(isspace(curr_char)) {
-                        continue;
-                    } else if(isalnum(curr_char) || curr_char == '_' || curr_char == '(' || curr_char == '[' || curr_char == '!') {
-                        // add the token as unary operator and reset the token buffer
-                        current_token_type = token_buffer[strlen(token_buffer) - 1] == '+'
-                            ? T_OPERATOR_SIGN_PLUS : T_OPERATOR_SIGN_MINUS;
-                        is_sign = false;
-                        reset_current_token = true;
-                    } else if(curr_char == '+' || curr_char == '-') {
-                        // update the unary operator
-                        token_buffer[strlen(token_buffer) - 1] = token_buffer[strlen(token_buffer) - 1] == curr_char ? '+': '-';
-                    } else {
-                        // Raise syntax error
-                        is_sign = false;
-                        raise_error(script, line_start_pos, "SYNTAX ERROR", line_no, col_no, index,
-                            "Unexpected occurence of '%s' (ASCII %d),"
-                            " invalid symbol after unary sign.\n", REPRCHAR(curr_char), curr_char
-                        );
-                        success = false;
-                    }
                 } else if(is_symbol) {
                     token_buffer = append_character(token_buffer, curr_char);
                     long token_index = get_token_index(token_buffer, count_valid_symbols, valid_symbols);
@@ -355,11 +334,34 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                         token_buffer[strlen(token_buffer)-1] = '\0';
                         reset_current_token = true;
                         is_symbol = false;
+                        if(is_sign_token(current_token_type) && !is_possible_operand(prev_token_type, -1)) {
+                            current_token_type = current_token_type == T_OPERATOR_ARITH_ADD
+                                ? T_OPERATOR_SIGN_PLUS : T_OPERATOR_SIGN_MINUS;
+                        }
                         if(is_bracket_token(current_token_type) && !check_cbstack(
                             &cbstack, &cbstack_size, current_token_type, static_error_msg)) {
                             raise_error(script, line_start_pos, "SYNTAX ERROR",
                                 line_no, col_no-1, index, static_error_msg);
-                                success = false;
+                            success = false;
+                        } else if(is_binary_operator(current_token_type) && !is_allowed_with_binary_operator(prev_token_type)) {
+                            raise_error(script, line_start_pos, "SYNTAX ERROR", line_no, col_no-1, index,
+                                "Unexpected occurence of binary operator '%s' after '%s'\n",
+                                stringify_token(current_token_type), stringify_token(prev_token_type)
+                            );
+                            success = false;
+                        } else if(is_unary_operator(current_token_type) && !is_allowed_with_unary_operator(prev_token_type)) {
+                            raise_error(script, line_start_pos, "SYNTAX ERROR", line_no, col_no-1, index,
+                                "Unexpected occurence of unary operator '%s' after '%s'\n",
+                                stringify_token(current_token_type), stringify_token(prev_token_type)
+                            );
+                            success = false;
+                        } else if(is_assignment_operator(current_token_type) && !((prev_token_type == T_OPERAND_IDENTIFIER)
+                            || (current_token_type == T_OPERATOR_SIMPLE_ASSIGN && is_datatype_token(prev_token_type)))) {
+                            raise_error(script, line_start_pos, "SYNTAX ERROR", line_no, col_no-1, index,
+                                "Unexpected occurence of assignment operator '%s' after '%s'\n",
+                                stringify_token(current_token_type), stringify_token(prev_token_type)
+                            );
+                            success = false;
                         }
                     } else {
                         current_token_type = (enum TOKENTYPE_E) (token_index + SYMBOL_TOKEN_OFFSET);
@@ -387,19 +389,8 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                         token_buffer = append_character(token_buffer, curr_char);
                         long token_index = get_token_index(token_buffer, count_valid_symbols, valid_symbols);
                         if(token_index != -1) {
-                            if((curr_char == '+' || curr_char == '-') && !is_possible_operand(prev_token_type)) {
-                                is_sign = true;
-                            } else {
-                                current_token_type = (enum TOKENTYPE_E) (token_index + SYMBOL_TOKEN_OFFSET);
-                                if(is_binary_operator(prev_token_type) && not_allowed_after_operator(current_token_type)) {
-                                    raise_error(script, line_start_pos, "SYNTAX ERROR",
-                                    line_no, col_no, index,
-                                    "Unexpected occurence of symbol %s after an operator\n", token_buffer);
-                                    success = false;
-                                } else {
-                                    is_symbol = true;
-                                }
-                            }
+                            current_token_type = (enum TOKENTYPE_E) (token_index + SYMBOL_TOKEN_OFFSET);
+                            is_symbol = true;
                         } else {
                             // Raise invalid token error
                             raise_error(script, line_start_pos, "SYNTAX ERROR", 
