@@ -24,7 +24,7 @@ static bool check_cbstack(enum TOKENTYPE_E** cbstack_ptr, long* cbstack_size_ptr
             }
         }
         if(!(*cbstack_ptr)) {
-            strcpy(error_msg, "Could not check code block stack due to memory allocation error\n");
+            strcpy(error_msg, "Could not check cbstack stack due to memory allocation error\n");
             result = false;
             *cbstack_size_ptr = 0;
         } else {
@@ -52,7 +52,7 @@ static bool check_cbstack(enum TOKENTYPE_E** cbstack_ptr, long* cbstack_size_ptr
             } else {
                 *cbstack_ptr = (enum TOKENTYPE_E*) realloc(*cbstack_ptr, (*cbstack_size_ptr) - 1);
                 if(!(*cbstack_ptr)) {
-                    strcpy(error_msg, "Could not check code block stack due to memory allocation error\n");
+                    strcpy(error_msg, "Could not check cbstack stack due to memory allocation error\n");
                     result = false;
                     *cbstack_size_ptr = 0;
                 } else {
@@ -65,7 +65,7 @@ static bool check_cbstack(enum TOKENTYPE_E** cbstack_ptr, long* cbstack_size_ptr
             result = false;
         }
     } else {
-        sprintf(error_msg, "Invalid token used as code block, found '%s'", stringify_token(cbid));
+        sprintf(error_msg, "Invalid token used as cbstack, found '%s'", stringify_token(cbid));
         result = false;
     }
     return result;
