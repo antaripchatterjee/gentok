@@ -1,4 +1,4 @@
-typedef myfunc_t :: func(int) bool;
+typedef myfunc_t :: func(i32) bool;
 
 func main(argv string[]) {
     even_odd_finder myfunc_t = @(v i32) -> v % 2 == 0;
