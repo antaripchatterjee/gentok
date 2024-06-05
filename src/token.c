@@ -156,5 +156,8 @@ bool is_allowed_before_datatype(enum TOKENTYPE_E token_type) {
         || token_type == T_SYMBOL_TYPE_ALIAS
         || token_type == T_SYMBOL_ELLIPSIS
         || token_type == T_SYMBOL_SIMPLE_PARANO
-        || token_type == T_SYMBOL_SIMPLE_PARANC;
+        || token_type == T_SYMBOL_SIMPLE_PARANC
+        || token_type == T_SYMBOL_SIMPLE_SQRBRC
+        || token_type == T_SYMBOL_SIMPLE_SQRBRO
+        || token_type == T_SYMBOL_SIMPLE_COMMA;
 }
