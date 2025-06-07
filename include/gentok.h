@@ -11,6 +11,10 @@
 #include "../include/token.h"
 #endif // MAKEFILECOMPILING
 
+#ifndef TOKEN_BUFFER_INC_SIZE
+#define TOKEN_BUFFER_INC_SIZE 1   // Default size for token buffer
+#endif // TOKEN_BUFFER__INC_SIZE
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus

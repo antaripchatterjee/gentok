@@ -11,6 +11,5 @@ func main(argv string[]) {
     } finally {
         return soe, soo;
     }
-    Printf 'Sum of even numbers is %d\n' soe;
-    Printf 'Sum of odd numbers is %d\n' soo;
+  ]
 }

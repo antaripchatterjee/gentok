@@ -19,7 +19,7 @@
     : CH == '\n' ? "\\n"  \
     : CH == '\r' ? "\\r"  \
     : CH == '\v' ? "\\v"  \
-    : CH == '\t' ? "\\t" : (const char*)((char[]){ CH }))
+    : CH == '\t' ? "\\t" : (const char*)((char[]){ CH, '\0' }))
 #define ISLINEENDINGCHAR(CH) ((CH == '\0') || (CH == '\r') || (CH == '\n'))
 
 typedef int(*esc_seq_validator_t)(char, int*, char*, char*);
@@ -30,7 +30,7 @@ extern "C" {
 
 int isodigit(int c);
 int isbdigit(int c);
-long get_token_index(const char* token_buffer, const long count, const char** list);
+// long get_token_index(const char* token_buffer, const long count, const char** list);
 char* append_character(char* buffer, char ch);
 int octal_seq_validator(char ch, int* esc_seq_char_count, char* esc_seq_str, char* esc_seq_err);
 int hex_seq_validator(char ch, int* esc_seq_char_count, char* esc_seq_str, char* esc_seq_err);
