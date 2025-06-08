@@ -1,6 +1,10 @@
 #ifndef __SCRIPT_H__
 #define __SCRIPT_H__
 
+#include <stddef.h>
+
+#define ISLINEENDINGCHAR(CH) ((CH == '\0') || (CH == '\r') || (CH == '\n'))
+
 #define SCRIPT "func main(argv string[...]) {" \
     "\tstr string = 'Hello World\\41'" \
     "\tPrintf str" \
@@ -22,6 +26,7 @@ extern "C" {
 #endif // __cplusplus
 
 char* read_script_from_file(const char* filename, enum SCRIPT_RD_CODE* script_rd_code_ptr);
+char* read_partial_script(const char* script, size_t line_start_pos);
 
 #ifdef __cplusplus
 }

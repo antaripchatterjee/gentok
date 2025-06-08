@@ -13,10 +13,15 @@
 #include <ctype.h>
 
 char* append_character(char* buffer, char ch) {
-    size_t next_size = strlen(buffer) + 2;
-    buffer = (char*) realloc(buffer, sizeof(char) * next_size);
-    buffer[next_size-2] = ch;
-    buffer[next_size-1] = '\0';
+    size_t len = buffer ? strlen(buffer) : 0;
+    if(buffer == NULL || (len > 0 && len % TOKEN_BUFFER_INC_SIZE == 0)) {
+        buffer = (char*) realloc(buffer, sizeof(char) * (len + TOKEN_BUFFER_INC_SIZE + 1));
+        if(!buffer) {
+            return NULL;
+        }
+        memset(buffer + len, '\0', sizeof(char) * (TOKEN_BUFFER_INC_SIZE + 1));
+    }
+    buffer[len] = ch;
     return buffer;
 }
 
@@ -28,90 +33,29 @@ int isbdigit(int c) {
     return ((char) c == '0') || ((char) c == '1');
 }
 
-int octal_seq_validator(char ch, int* esc_seq_char_count, char* esc_seq_str, char* esc_seq_err) {
-    if(isodigit(ch)) {
-        int pos = 2 - (--(*esc_seq_char_count));
-        esc_seq_str[pos] = ch;
-        unsigned esc_seq_val = (unsigned) strtol(esc_seq_str, NULL, 8);
-        if(esc_seq_val <= 0377) {
-            return 1;
-        } else {
-            sprintf(esc_seq_err, "Invalid string literal, octal escape sequence '\\%s' is out of range", esc_seq_str);
-            return 0;
-        }
-    } else {
-        *esc_seq_char_count = 0;
-    }
-    return 1;
-}
-
-int hex_seq_validator(char ch, int* esc_seq_char_count, char* esc_seq_str, char* esc_seq_err) {
+const char* unicode_seq_validator(char ch, int remaining_char_count, char* esc_seq_str) {
     if(isxdigit(ch)) {
-        int pos = 2 - ((*esc_seq_char_count)--);
-        esc_seq_str[pos] = ch;
-    } else if(*esc_seq_char_count == 2) {
-        sprintf(esc_seq_err, "Invalid string literal, '\\x' used with no following hex digits");
-        return 0;
-    } else {
-        *esc_seq_char_count = 0;
-    }
-    return 1;
-}
-
-int universal_code_seq_validator(char ch, int* esc_seq_char_count, char* esc_seq_str, char* esc_seq_err) {
-    static int max_esc_seq_char_count;
-    if(max_esc_seq_char_count == 0) {
-        max_esc_seq_char_count = *esc_seq_char_count;
-    }
-    char universal_code_flag = max_esc_seq_char_count == 4 ? 'u' : 'U';
-    if(isxdigit(ch)) {
-        int pos = max_esc_seq_char_count - ((*esc_seq_char_count)--);
-        esc_seq_str[pos] = ch;
-    } else {
-        sprintf(esc_seq_err, "Invalid string literal, incomplete universal character name"
-            " \\%c%s. Unexpected occurence of '%s' (ASCII %d)",
-            universal_code_flag, esc_seq_str, REPRCHAR(ch), ch);
-        max_esc_seq_char_count = 0;
-        return 0;
-    }
-    if(*esc_seq_char_count == 0) {
-        max_esc_seq_char_count = 0;
-        unsigned long esc_seq_val = strtoul(esc_seq_str, NULL, 16);
-        if(esc_seq_val > 0x0010FFFF) {
-            sprintf(esc_seq_err, "Invalid string literal, universal code '\\%c%s' is outside the UCS codespace",
-                universal_code_flag, esc_seq_str);
-            return 0;
+        int pos = 4 - remaining_char_count;
+        if(pos < 0) {
+            return "Invalid position for universal character name";
         }
+        esc_seq_str[pos] = ch;
+    } else {
+        return "Incomplete universal character name";
     }
-    return 1;
+    return NULL;
 }
 
 
-int get_esc_seq_validation_rule(char esc_seq_char, esc_seq_validator_t* escape_seq_validator) {
-    if(esc_seq_char == '\\' || esc_seq_char == '$' 
-        || esc_seq_char == '\'' || esc_seq_char == '"' 
-        || esc_seq_char == '`'  || esc_seq_char == '?' 
-        || esc_seq_char == 'a' || esc_seq_char == 'b'
+int get_esc_seq_char_count(char esc_seq_char) {
+    if(esc_seq_char == '\\' || esc_seq_char == '"' 
+        || esc_seq_char == '/' || esc_seq_char == 'b'
         || esc_seq_char == 'f' || esc_seq_char == 'n'
-        || esc_seq_char == 'r' || esc_seq_char == 't'
-        || esc_seq_char == 'v' || esc_seq_char == 't'
-        || esc_seq_char == 's') {
-        *escape_seq_validator = NULL;
+        || esc_seq_char == 'r' || esc_seq_char == 't') {
         return 0;
-    } else if(isodigit(esc_seq_char)) {
-        *escape_seq_validator = &octal_seq_validator;
-        return 2;
-    } else if(esc_seq_char == 'x') {
-        *escape_seq_validator = &hex_seq_validator;
-        return 2;
     } else if(esc_seq_char == 'u') {
-        *escape_seq_validator = &universal_code_seq_validator;
         return 4;
-    } else if(esc_seq_char == 'U') {
-        *escape_seq_validator = &universal_code_seq_validator;
-        return 8;
     } else {
-        *escape_seq_validator = NULL;
         return -1;
     }
 }
@@ -133,33 +77,47 @@ int get_esc_seq_validation_rule(char esc_seq_char, esc_seq_validator_t* escape_s
 // }
 
 
-char* read_partial_script(const char* script, size_t line_start_pos) {
-    size_t index = line_start_pos;
-    for(;!ISLINEENDINGCHAR(script[index]); index++);
-    char* current_line = (char*) malloc(sizeof(char) * (index - line_start_pos + 1));
-    memset(current_line, 0, (index - line_start_pos + 1));
-    memmove(current_line, &(script[line_start_pos]), (index - line_start_pos));
-    return current_line;
-}
 
-int raise_error(const char* script, size_t line_start_pos, const char* title, size_t line_no, size_t col_no, size_t pos_index, const char* fmt, ...) {
-    char* current_line = read_partial_script(script, line_start_pos);
-    if(!current_line) {
-        fprintf(stderr, "System error!\n\n");
-        return -1;
-    }
-    size_t col_no_temp = col_no == (size_t) -1 ? (strlen(current_line)+1) : col_no;
-    int wrc = fprintf(stderr, "[ERROR::%zu,%zu;%zu] %s\n\n", line_no, col_no_temp, pos_index, title);
-    int extra_space = fprintf(stderr, "  %zu| ", line_no);
-    wrc += extra_space;
-    wrc += fprintf(stderr, "%s\n", current_line);
-    char padfmt[32] = { 0 };
-    sprintf(padfmt, "%%%zus", col_no_temp+extra_space+1);
-    wrc += fprintf(stderr, padfmt, "^\n");
+// int raise_error(const char* script, size_t line_start_pos, const char* title, size_t line_no, size_t col_no, size_t pos_index, const char* fmt, ...) {
+//     char* current_line = read_partial_script(script, line_start_pos);
+//     if(!current_line) {
+//         fprintf(stderr, "System error!\n\n");
+//         return -1;
+//     }
+//     size_t col_no_temp = col_no == (size_t) -1 ? (strlen(current_line)+1) : col_no;
+//     int wrc = fprintf(stderr, "[ERROR::%zu,%zu;%zu] %s\n\n", line_no, col_no_temp, pos_index, title);
+//     int extra_space = fprintf(stderr, "  %zu| ", line_no);
+//     wrc += extra_space;
+//     wrc += fprintf(stderr, "%s\n", current_line);
+//     char padfmt[32] = { 0 };
+//     sprintf(padfmt, "%%%zus", col_no_temp+extra_space+1);
+//     wrc += fprintf(stderr, padfmt, "^\n");
+//     va_list args;
+//     va_start(args, fmt);
+//     wrc += vfprintf(stderr, fmt, args);
+//     va_end(args);
+//     free(current_line);
+//     return wrc;
+// }
+
+int build_error_message(char* msg_plc_hldr, size_t pos_index, const char* fmt, ...) {
+    if (!msg_plc_hldr || !fmt) return 0;
+
+    int written = 0;
+
+    // Write the prefix: "Syntax Error at [pos_index]. "
+    written = snprintf(msg_plc_hldr, 1024, "Syntax Error at [%zu]. ", pos_index);
+
+    // If snprintf fails
+    if (written < 0) return 0;
+
+    // Format the remaining message using va_list
     va_list args;
     va_start(args, fmt);
-    wrc += vfprintf(stderr, fmt, args);
+    int fmt_written = vsnprintf(msg_plc_hldr + written, 1024 - written, fmt, args);
     va_end(args);
-    free(current_line);
-    return wrc;
+
+    if (fmt_written < 0) return written;  // Return what we wrote before
+
+    return written + fmt_written;
 }

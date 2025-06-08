@@ -13,8 +13,9 @@
 static struct token_t* add_token(struct token_t* token, const char* token_buffer, enum TOKENTYPE_E token_type, size_t line_no, size_t col_no, size_t line_start_pos) {
     token->token_type = token_type;
     token->token_buffer = (char*) malloc(sizeof(char) * (strlen(token_buffer) + 1));
-    memset(token->token_buffer, '\0', sizeof(char) * (strlen(token_buffer) + 1));
+    // memset(token->token_buffer, '\0', sizeof(char) * (strlen(token_buffer) + 1));
     strcpy(token->token_buffer, token_buffer);
+    token->token_buffer[strlen(token_buffer)] = '\0';
     token->pos = (struct token_pos_t) { .line_no = line_no, .col_no = col_no};
     token->line_start_pos = line_start_pos;
     token->next_token = (struct token_t*) malloc(sizeof(struct token_t));
@@ -28,6 +29,7 @@ static struct token_t* add_token(struct token_t* token, const char* token_buffer
 bool tokenize(const char* script, struct token_t* token, long* number_of_tokens) {
     const char* reserved_keywords[] = RESERVED_KEYWORDS;
     const char valid_symbols[] = VALID_SYMBOLS;
+    char error_message[ERROR_MSG_SIZE+1] = { 0 };
 
     const long count_reserved_keywords = sizeof(reserved_keywords)/sizeof(char*);
     const long count_valid_symbols = sizeof(valid_symbols)/sizeof(char);
@@ -43,58 +45,49 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
     
     enum TOKENTYPE_E current_token_type = T_TOKEN_UNKNOWN; //, prev_token_type;
     struct token_t* current_token = token;
-    char* token_buffer = (char*) malloc(sizeof(char) * TOKEN_BUFFER_INC_SIZE);
-    token_buffer[0] = '\0';
+    char* token_buffer = NULL;
 
     size_t line_no = 1, col_no = 1, line_start_pos = 0;
     size_t token_line_no, token_col_no;
     struct token_pos_t long_token_pos = { 0UL, 0UL };
     char esc_seq_str[ESCAPE_SEQ_MAX_LEN] = { 0 };
-    char static_error_msg[ERROR_MSG_SIZE] = { 0 };
-    esc_seq_validator_t escape_seq_validator = NULL;
     int escape_seq_char_count = -1;
+    bool is_unicode_seq = false;
+
     for(size_t index = 0; (curr_char = script[index]) != '\0' && success; col_no++, index++) {
-        printf("Processing character '%c' (ASCII %d) at index %zu, line %zu, col %zu\n", curr_char, curr_char, index, line_no, col_no);
         if((prev_char == '\r' || prev_char == '\n') && !is_string) {
             line_start_pos = index;
         }
-        if(/* !is_comment */ true) {
-            if(!isspace(curr_char) && !isprint(curr_char)) {
-                raise_error(script, line_start_pos, "SYNTAX ERROR", line_no, col_no, index,
-                    "Found invalid character %s (ASCII %d)\n", REPRCHAR(curr_char), curr_char);
-                success = false;
-            }
+        if(isprint(curr_char) || isspace(curr_char)) {
             if(is_string) {
-                if((curr_char == '\n' || curr_char == '\r')) {
-                    raise_error(script, line_start_pos, "SYNTAX ERROR", long_token_pos.line_no, long_token_pos.col_no, index, 
-                        "Invalid string literal, missing string ending character \"");
+                if(iscntrl(curr_char)) {
+                    build_error_message(error_message, index, "Found control character '%s' (ASCII %d) in string literal", REPRCHAR(curr_char), curr_char);
                     success = false;
                 }
                 if(success) {
                     token_buffer = append_character(token_buffer, curr_char);
                     if(prev_char == ESCAPE_CHARACTER) {
-                        memset(static_error_msg, 0, ERROR_MSG_SIZE);
-                        if(escape_seq_validator && escape_seq_char_count > 0) {
-                            if(!escape_seq_validator(curr_char, &escape_seq_char_count, esc_seq_str, static_error_msg)) {
-                                // error
-                                raise_error(script, line_start_pos, "SYNTAX ERROR", long_token_pos.line_no, long_token_pos.col_no, index, static_error_msg);
-                                memset(static_error_msg, 0, ERROR_MSG_SIZE);
+                        if(escape_seq_char_count > 0) {
+                            const char* fixed_error_msg = unicode_seq_validator(curr_char, escape_seq_char_count, esc_seq_str);
+                            if(fixed_error_msg) {
+                                build_error_message(error_message, index, "Invalid string literal. %s %s.", fixed_error_msg, esc_seq_str);
                                 success = false;
                             }
-                        } else if(!escape_seq_validator) {
-                            escape_seq_char_count = get_esc_seq_validation_rule(curr_char, &escape_seq_validator);
+                            escape_seq_char_count--;
+                        } else {
+                            escape_seq_char_count = get_esc_seq_char_count(curr_char);
                             if(escape_seq_char_count < 0) {
-                                raise_error(script, line_start_pos, "SYNTAX ERROR", long_token_pos.line_no, long_token_pos.col_no, index,
-                                    "Invalid string literal, unknown escape sequence '\\%c'", curr_char);
+                                build_error_message(error_message, index, 
+                                    "Invalid string literal. Invalid escape sequence '\\%c'.", curr_char);
                                 success = false;
-                            } else if(escape_seq_validator == &octal_seq_validator) {
-                                esc_seq_str[0] = curr_char;
+                            } else if(escape_seq_char_count == 4) {
+                                is_unicode_seq = true;
                             }
                         }
-                        if(!escape_seq_char_count && escape_seq_validator) {
+                        if(is_unicode_seq && !escape_seq_char_count) {
                             memset(esc_seq_str, 0, ESCAPE_SEQ_MAX_LEN);
                             escape_seq_char_count = -1;
-                            escape_seq_validator = NULL;
+                            is_unicode_seq = false;
                             prev_char = '\0';
                         }
                     }
@@ -128,7 +121,7 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                             current_token_type = (enum TOKENTYPE_E) (token_index + RESERVED_KEYWORD_OFFSET);
                         } else {
                             success = false;
-                            // TODO: raise_error as invalid reserved keyword
+                            build_error_message(error_message, index, "Invalid reserved keyword '%s'.", token_buffer);
                         }
                         is_resv_const = false;
                         push_current_token = true;
@@ -143,12 +136,11 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                                     exp_appended = true;
                                 }
                             } else if(curr_char != ',' && curr_char != '}' && !isspace(curr_char)) {
-                                // TODO: raise_error as leading zero is not allowed
                                 success = false;
                                 allow_char_as_num = false;
-                                raise_error(script, line_start_pos, "SYNTAX ERROR", line_no, col_no, index,
-                                    "Unexpected occurence of '%s' (ASCII %d),"
-                                    " not a valid decimal digit after leading zero.\n", REPRCHAR(curr_char), curr_char
+                                build_error_message(error_message, index,
+                                    "Unexpected occurence of '%s' (ASCII %d), "
+                                    "not a valid decimal digit after leading zero.\n", REPRCHAR(curr_char), curr_char
                                 );
                             } else {
                                 allow_char_as_num = false;
@@ -164,11 +156,11 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                             } else if(curr_char != ',' && curr_char != '}' && !isspace(curr_char)) {
                                 // Raise invalid syntax error
                                 allow_char_as_num = false;
-                                raise_error(script, line_start_pos, "SYNTAX ERROR", line_no, col_no, index,
-                                    "Unexpected occurence of '%s' (ASCII %d),"
-                                    " not a valid decimal digit.\n", REPRCHAR(curr_char), curr_char
-                                );
                                 success = false;
+                                build_error_message(error_message, index,
+                                    "Unexpected occurence of '%s' (ASCII %d), "
+                                    "not a valid decimal digit.\n", REPRCHAR(curr_char), curr_char
+                                );
                             } else {
                                 allow_char_as_num = false;
                             }
@@ -186,11 +178,11 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                         } else if(curr_char != ',' && curr_char != '}' && !isspace(curr_char)) {
                             // Raise the invalid syntax error
                             allow_char_as_num = false;
-                            raise_error(script, line_start_pos, "SYNTAX ERROR", line_no, col_no, index,
-                                "Unexpected occurence of '%s' (ASCII %d),"
-                                " not a valid decimal digit.\n", REPRCHAR(curr_char), curr_char
-                            );
                             success = false;
+                            build_error_message(error_message, index,
+                                "Unexpected occurence of '%s' (ASCII %d), "
+                                "not a valid decimal digit.", REPRCHAR(curr_char), curr_char
+                            );
                         } else {
                             allow_char_as_num = false;
                         }
@@ -238,15 +230,17 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                             long_token_pos.col_no = col_no;
                         } else {
                             // Raise invalid token error
-                            raise_error(script, line_start_pos, "SYNTAX ERROR", 
-                                line_no, col_no, index,
-                                "Found \"%s\", not a valid symbol\n", token_buffer
+                            build_error_message(error_message, index,
+                                "Found \"%s\", not a valid symbol.", token_buffer
                             );
                             success = false;
                         }
                     }
                 }
             }
+        } else {
+            build_error_message(error_message, index, "Found invalid or unsupported control character '%s' (ASCII %d)\n", REPRCHAR(curr_char), curr_char);
+            success = false;
         }
         if((curr_char == '\n' && prev_char != '\r') || curr_char == '\r') {
             line_no++;
@@ -267,8 +261,9 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
                 ? long_token_pos.line_no : line_no;
             current_token = add_token(current_token, (const char*) token_buffer, current_token_type, token_line_no, token_col_no, line_start_pos);
             (*number_of_tokens)++;
-            token_buffer = (char*) realloc(token_buffer, sizeof(char) * 1);
-            token_buffer[0] = '\0';
+            // token_buffer = (char*) realloc(token_buffer, sizeof(char) * 1);
+            // token_buffer[0] = '\0';
+            memset(token_buffer, 0, sizeof(char) * (strlen(token_buffer) + 1));
             index--;
             push_current_token = false;
             // prev_token_type = current_token_type;
@@ -284,8 +279,7 @@ bool tokenize(const char* script, struct token_t* token, long* number_of_tokens)
     }
     if (success) {
         if(is_string) {
-            raise_error(script, line_start_pos, "SYNTAX ERROR", long_token_pos.line_no, long_token_pos.col_no, strlen(script)-1, 
-                "Invalid string literal, missing string ending character \"");
+            build_error_message(error_message, strlen(script)-1, "Invalid string literal, missing string ending character \"");
             success = false;
         }
     }
